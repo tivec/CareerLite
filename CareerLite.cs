@@ -25,26 +25,56 @@ namespace CareerLite
 			if (reason != TransactionReasons.Cheating) // we don't want an ugly infinite loop here, do we?
 			{
 				if (Funding.Instance.Funds < MONEY_LOCK) {
-					Funding.Instance.AddFunds (MONEY_LOCK - Funding.Instance.Funds, TransactionReasons.Cheating);
+					Funding.Instance.AddFunds (MONEY_LOCK - amount, TransactionReasons.Cheating);
 				}
 			}
 
 		}
 
-		public void UnlockAllScience() {
+		public void HandleTechTree(RDTechTree techTree) {
+
+			foreach(RDNode node in RDController.Instance.nodes)
+			{
+
+				if (!node.IsResearched) {
+					node.tech.ResearchTech ();
+					node.tech.UnlockTech (true);
+				}
+
+
+
+				if (node.IsResearched && node.tech != null)
+				{
+					node.tech.AutoPurchaseAllParts ();
+					foreach (AvailablePart fPart in node.tech.partsAssigned)
+					{
+						if (!node.tech.partsPurchased.Contains(fPart)) {
+							Debug.Log("[CareerLite] Purchased part " + fPart.name);
+						} else {
+							Debug.Log("[CareerLite] Part " + fPart.name + " already purchased");
+						}
+					}
+
+					//node.UpdateGraphics ();
+
+				}
+			}
 		}
+
 
 
 		public void Start()
 		{
 			Debug.Log("[CareerLite [" + this.GetInstanceID ().ToString ("X") + "][" + Time.time.ToString ("0.0000") + "]: Start");
 			GameEvents.OnFundsChanged.Add (FundsChanged);
-			GameEvents.onGUIRnDComplexSpawn.Add (UnlockAllScience);
+			RDTechTree.OnTechTreeSpawn.Add (HandleTechTree);
 
 			// This is a safeguard, just to make sure we have locked money.
 			if (Funding.Instance.Funds < MONEY_LOCK) {
 				Funding.Instance.AddFunds (MONEY_LOCK - Funding.Instance.Funds, TransactionReasons.Cheating);
 			}
+
+
 
 		}
 
@@ -55,7 +85,7 @@ namespace CareerLite
 
 		public override void OnSave (ConfigNode node)
 		{
-			node.AddValue ("LockedFunds", lockFunds.ToString());
+			//node.AddValue ("LockedFunds", lockFunds.ToString());
 		}
 
 		// TODO: Move this to AstrotechUtilities
@@ -67,13 +97,13 @@ namespace CareerLite
 		public override void OnLoad (ConfigNode node)
 		{
 			Debug.Log("[CareerLite [" + this.GetInstanceID ().ToString ("X") + "][" + Time.time.ToString ("0.0000") + "]: OnLoad.");
-			lockFunds = GetBool (node, "LockedFunds");
+			//lockFunds = GetBool (node, "LockedFunds");
 		}
 
 		void OnDestroy()
 		{
 			GameEvents.OnFundsChanged.Remove (FundsChanged);
-			GameEvents.onGUIRnDComplexSpawn.Remove (UnlockAllScience);
+			RDTechTree.OnTechTreeSpawn.Remove (HandleTechTree);
 		}
 
 		void OnGUI() 
