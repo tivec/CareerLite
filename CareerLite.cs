@@ -5,10 +5,11 @@ using UnityEngine;
 
 namespace CareerLite
 {
-	[KSPScenario(ScenarioCreationOptions.AddToExistingCareerGames,GameScenes.FLIGHT,GameScenes.EDITOR,GameScenes.SPACECENTER,GameScenes.TRACKSTATION)] 
+	[KSPScenario(ScenarioCreationOptions.AddToExistingCareerGames | ScenarioCreationOptions.AddToNewCareerGames,GameScenes.FLIGHT,GameScenes.EDITOR,GameScenes.SPACECENTER,GameScenes.TRACKSTATION)] 
 	public class CareerLite : ScenarioModule
 	{
 		private bool lockFunds = false;
+		public static double MONEY_LOCK = 99999999999;
 
 		public CareerLite ()
 		{
@@ -21,9 +22,16 @@ namespace CareerLite
 			// if (!lockFunds)
 			//	return;
 
-			if (reason != TransactionReasons.Cheating)
-				Funding.Instance.AddFunds (double.MaxValue-amount, TransactionReasons.Cheating);
+			if (reason != TransactionReasons.Cheating) // we don't want an ugly infinite loop here, do we?
+			{
+				if (Funding.Instance.Funds < MONEY_LOCK) {
+					Funding.Instance.AddFunds (MONEY_LOCK - Funding.Instance.Funds, TransactionReasons.Cheating);
+				}
+			}
 
+		}
+
+		public void UnlockAllScience() {
 		}
 
 
@@ -31,6 +39,12 @@ namespace CareerLite
 		{
 			Debug.Log("[CareerLite [" + this.GetInstanceID ().ToString ("X") + "][" + Time.time.ToString ("0.0000") + "]: Start");
 			GameEvents.OnFundsChanged.Add (FundsChanged);
+			GameEvents.onGUIRnDComplexSpawn.Add (UnlockAllScience);
+
+			// This is a safeguard, just to make sure we have locked money.
+			if (Funding.Instance.Funds < MONEY_LOCK) {
+				Funding.Instance.AddFunds (MONEY_LOCK - Funding.Instance.Funds, TransactionReasons.Cheating);
+			}
 
 		}
 
@@ -59,6 +73,7 @@ namespace CareerLite
 		void OnDestroy()
 		{
 			GameEvents.OnFundsChanged.Remove (FundsChanged);
+			GameEvents.onGUIRnDComplexSpawn.Remove (UnlockAllScience);
 		}
 
 		void OnGUI() 
