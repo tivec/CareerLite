@@ -24,9 +24,7 @@ namespace CareerLite
 
 			if (reason != TransactionReasons.Cheating) // we don't want an ugly infinite loop here, do we?
 			{
-				if (Funding.Instance.Funds < MONEY_LOCK) {
-					Funding.Instance.AddFunds (MONEY_LOCK - amount, TransactionReasons.Cheating);
-				}
+				LockMoney ();
 			}
 
 		}
@@ -36,31 +34,41 @@ namespace CareerLite
 			foreach(RDNode node in RDController.Instance.nodes)
 			{
 
-				if (!node.IsResearched) {
-					node.tech.ResearchTech ();
-					node.tech.UnlockTech (true);
-				}
+				Debug.Log ("[CareerLite] Node " + node.name + " is " + (node.IsResearched ? "researched" : "NOT researched"));
 
+
+				if (!node.IsResearched) {
+					//node.tech.ResearchTech ();
+					//node.tech.AutoPurchaseAllParts ();
+				}
 
 
 				if (node.IsResearched && node.tech != null)
 				{
-					node.tech.AutoPurchaseAllParts ();
-					foreach (AvailablePart fPart in node.tech.partsAssigned)
+
+					foreach (AvailablePart fPart in node.tech.partsPurchased)
 					{
-						if (!node.tech.partsPurchased.Contains(fPart)) {
-							Debug.Log("[CareerLite] Purchased part " + fPart.name);
+						if (node.tech.partsAssigned.Contains(fPart)) {
+							Debug.Log("[CareerLite] Part in both lists: " + fPart.name);
 						} else {
-							Debug.Log("[CareerLite] Part " + fPart.name + " already purchased");
+							Debug.Log("[CareerLite] Part in purchased : " + fPart.name);
 						}
 					}
-
 					//node.UpdateGraphics ();
-
 				}
 			}
 		}
 
+
+		public void LockMoney()
+		{
+			// This is a safeguard, just to make sure we have locked money.
+			if (Funding.Instance.Funds < MONEY_LOCK) {
+				Funding.Instance.AddFunds (MONEY_LOCK - Funding.Instance.Funds, TransactionReasons.Cheating);
+			} else if (Funding.Instance.Funds > MONEY_LOCK) {
+				Funding.Instance.AddFunds (Funding.Instance.Funds - MONEY_LOCK, TransactionReasons.Cheating);
+			}
+		}
 
 
 		public void Start()
@@ -69,14 +77,11 @@ namespace CareerLite
 			GameEvents.OnFundsChanged.Add (FundsChanged);
 			RDTechTree.OnTechTreeSpawn.Add (HandleTechTree);
 
-			// This is a safeguard, just to make sure we have locked money.
-			if (Funding.Instance.Funds < MONEY_LOCK) {
-				Funding.Instance.AddFunds (MONEY_LOCK - Funding.Instance.Funds, TransactionReasons.Cheating);
-			}
-
-
+			LockMoney ();
 
 		}
+
+
 
 		public override void OnAwake ()
 		{
