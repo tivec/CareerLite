@@ -17,10 +17,11 @@
 */
 
 
-using System;
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Collections;
+
 
 namespace CareerLite
 {
@@ -34,21 +35,19 @@ namespace CareerLite
 			Debug.Log("[CareerLite [" + this.GetInstanceID ().ToString ("X") + "][" + Time.time.ToString ("0.0000") + "]: Constructor");
 		}
 
-		public void FundsChanged(double amount, TransactionReasons reason)
+		public void FundsChanged (double amount, TransactionReasons reason)
 		{
 			if (reason != TransactionReasons.Cheating) // we don't want an ugly infinite loop here, do we?
 			{
 				LockMoney ();
 			}
-
 		}
 
-		public void LockMoney()
+		public void LockMoney ()
 		{
 			// This is a safeguard, just to make sure we have locked money.
 			if (Funding.Instance.Funds < MONEY_LOCK) {
 				Funding.Instance.AddFunds (MONEY_LOCK - Funding.Instance.Funds, TransactionReasons.Cheating);
-
 			} else if (Funding.Instance.Funds > MONEY_LOCK) {
 				Funding.Instance.AddFunds (-Funding.Instance.Funds, TransactionReasons.Cheating);
 				Funding.Instance.AddFunds (MONEY_LOCK, TransactionReasons.Cheating);
@@ -59,27 +58,40 @@ namespace CareerLite
 		 * Code for TreeToppler is available under GPLv3, http://forum.kerbalspaceprogram.com/threads/107663, and express permission was given
 		 * to use as inspiration: http://forum.kerbalspaceprogram.com/threads/124468-1-0-2-Kerbin-Astrotech-CareerLite?p=1999301&viewfull=1#post1999301
 		 */
-		public void RnDOpened(RDController controller)
+		public void RnDOpened (RDController controller)
 		{
-			foreach (RDNode node in controller.nodes) 
-			{
+			foreach (RDNode node in controller.nodes) {
 				if (node.tech != null)
 					node.tech.UnlockTech (true); //this will trigger an event, but we're not actioning this event for now.
 			}
 		}
 
-		public void Start()
+		private IEnumerator Start()
 		{
-			Debug.Log("[CareerLite [" + this.GetInstanceID ().ToString ("X") + "][" + Time.time.ToString ("0.0000") + "]: Start");
+
+
+			Debug.Log("[CareerLite [" + GetInstanceID().ToString ("X") + "][" + Time.time.ToString ("0.0000") + "]: Start");
 
 			// Hook fund changes
+			Debug.Log ("[CareerLite]: Hook FundsChanged");
 			GameEvents.OnFundsChanged.Add (FundsChanged);
 
 			// Hook technology
+			Debug.Log ("[CareerLite]: Hook RnDOpened");
 			RDController.OnRDTreeSpawn.Add (RnDOpened);
 
 			LockMoney ();
 
+			yield return 0;
+
+			ScenarioUpgradeableFacilities.protoUpgradeables.ToList ().ForEach (pu =>
+			{
+				foreach (var p in pu.Value.facilityRefs) {
+					p.SetLevel(p.MaxLevel);
+				}
+			});
+
+			LockMoney ();
 		}
 
 
@@ -93,25 +105,22 @@ namespace CareerLite
 		}
 
 		// TODO: Move this to AstrotechUtilities
-		private bool GetBool(ConfigNode node, string key) {
+		static bool GetBool (ConfigNode node, string key)
+		{
 			return bool.Parse (node.GetValue (key));
 		}
 
 		public override void OnLoad (ConfigNode node)
 		{
-			Debug.Log("[CareerLite [" + this.GetInstanceID ().ToString ("X") + "][" + Time.time.ToString ("0.0000") + "]: OnLoad.");
+			Debug.Log("[CareerLite [" + GetInstanceID ().ToString ("X") + "][" + Time.time.ToString ("0.0000") + "]: OnLoad.");
 		}
 
-		void OnDestroy()
+		void OnDestroy ()
 		{
 			GameEvents.OnFundsChanged.Remove (FundsChanged);
 			RDController.OnRDTreeSpawn.Remove (RnDOpened);
 		}
 
-		void OnGUI() 
-		{
-
-		}
 	}
 }
 
