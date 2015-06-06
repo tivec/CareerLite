@@ -48,6 +48,7 @@ namespace CareerLite
 			// This is a safeguard, just to make sure we have locked money.
 			if (Funding.Instance.Funds < MONEY_LOCK) {
 				Funding.Instance.AddFunds (MONEY_LOCK - Funding.Instance.Funds, TransactionReasons.Cheating);
+
 			} else if (Funding.Instance.Funds > MONEY_LOCK) {
 				Funding.Instance.AddFunds (-Funding.Instance.Funds, TransactionReasons.Cheating);
 				Funding.Instance.AddFunds (MONEY_LOCK, TransactionReasons.Cheating);
@@ -58,7 +59,6 @@ namespace CareerLite
 		 * Code for TreeToppler is available under GPLv3, http://forum.kerbalspaceprogram.com/threads/107663, and express permission was given
 		 * to use as inspiration: http://forum.kerbalspaceprogram.com/threads/124468-1-0-2-Kerbin-Astrotech-CareerLite?p=1999301&viewfull=1#post1999301
 		 */
-
 		public void RnDOpened(RDController controller)
 		{
 			foreach (RDNode node in controller.nodes) 

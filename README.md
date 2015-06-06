@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-This mod locks your funds to 99 999 999 999. Future plans are to unlock the tech tree, and set the reputation level. GUI not included (yet)
+This mod locks your funds to 99 999 999 999, and unlocks all technologies. Future plans are to set your reputation level. GUI not included (yet).
 
 ## Foreword
 
@@ -20,8 +20,7 @@ One can argue that the functionality is already in the game. You can go into the
 
 ## Future plans
 
-In 0.2 and beyond, a couple of new features are planned. 
-* Unlocking the whole tech tree
+In 0.3 and beyond, a couple of new features are planned. 
 * A GUI to enable or disable features at will.
 * A way to lock your reputation.
 
@@ -32,27 +31,5 @@ All releases will be made available here on Github:
 https://github.com/tivec/CareerLite/releases
 
 ## License
-
-The MIT License (MIT)
-
-Copyright (c) 2015 Tivec
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
+This plugin is licensed under GPLv3. See the LICENSE file for details
 
