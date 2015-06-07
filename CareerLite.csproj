@@ -16,24 +16,31 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
+    <OutputPath>..\..\.Deploy\Debug\GameData\Astrotech\CareerLite\plugins</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
     <CustomCommands>
       <CustomCommands>
-        <Command type="AfterBuild" command="copyover" />
+        <Command type="AfterBuild" command="mv -f ${TargetDir}/icons ../" workingdir="${TargetDir}" />
+        <Command type="AfterBuild" command="../../.Deploy/deploy ${ProjectConfigName}" workingdir="../../.Deploy" />
+        <Command type="BeforeBuild" command="rm -rf ${TargetDir}/../icons" />
       </CustomCommands>
     </CustomCommands>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
+    <OutputPath>..\..\.Deploy\Release\GameData\Astrotech\CareerLite\plugins</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
+    <CustomCommands>
+      <CustomCommands>
+        <Command type="AfterBuild" command="../../.Deploy/deploy ${ProjectConfigName}" workingdir="../../.Deploy" />
+      </CustomCommands>
+    </CustomCommands>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -46,10 +53,22 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Core" />
+    <Reference Include="AstrotechUtilities">
+      <HintPath>..\..\..\Games\KSP\1.0.2-dev\GameData\Astrotech\AstrotechUtilities.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="CareerLite.cs" />
+    <Compile Include="CareerLiteUI.cs" />
+    <Compile Include="ToolbarWrapper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <EmbeddedResource Include="icons\careerlite.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CareerLite.cs" />
+  </ItemGroup>
 </Project>

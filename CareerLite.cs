@@ -21,7 +21,7 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Collections;
-
+using Astrotech;
 
 namespace CareerLite
 {
@@ -102,12 +102,6 @@ namespace CareerLite
 
 		public override void OnSave (ConfigNode node)
 		{
-		}
-
-		// TODO: Move this to AstrotechUtilities
-		static bool GetBool (ConfigNode node, string key)
-		{
-			return bool.Parse (node.GetValue (key));
 		}
 
 		public override void OnLoad (ConfigNode node)
