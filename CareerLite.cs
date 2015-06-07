@@ -30,14 +30,32 @@ namespace CareerLite
 	public class CareerLite : ScenarioModule
 	{
 		public static double MONEY_LOCK = 99999999999;
+		private CareerLiteUI CareerLiteGUI = new CareerLiteUI();
+		private bool unlockTechnology = false;
+
+		private Dictionary<string, float> facilities = new Dictionary<string, float>();
 
 		public CareerLite ()
 		{
 			Utilities.Log ("CareerLite", GetInstanceID (), "Constructor");
+
+			// add the facilities, so we can save/load properly - can we do this better?
+			facilities.Add ("LaunchPad", 0);
+			facilities.Add ("Runway", 0);
+			facilities.Add ("VehicleAssemblyBuilding", 0);
+			facilities.Add ("TrackingStation", 0);
+			facilities.Add ("AstronautComplex", 0);
+			facilities.Add ("MissionControl", 0);
+			facilities.Add ("ResearchAndDevelopment", 0);
+			facilities.Add ("Administration", 0);
+
 		}
 
 		public void FundsChanged (double amount, TransactionReasons reason)
 		{
+			if (!CareerLiteGUI.GetOption (CareerOptions.LOCKFUNDS)) 
+				return;
+
 			if (reason != TransactionReasons.Cheating) // we don't want an ugly infinite loop here, do we?
 			{
 				LockMoney ();
@@ -61,10 +79,50 @@ namespace CareerLite
 		 */
 		public void RnDOpened (RDController controller)
 		{
-			foreach (RDNode node in controller.nodes) {
-				if (node.tech != null)
-					node.tech.UnlockTech (true); //this will trigger an event, but we're not actioning this event for now.
-			}
+			if (!unlockTechnology) 
+				return;
+
+
+			if (CareerLiteGUI.GetOption(CareerOptions.UNLOCKTECH))
+			{
+				float level = GameVariables.Instance.GetScienceCostLimit(ScenarioUpgradeableFacilities.GetFacilityLevel(SpaceCenterFacility.ResearchAndDevelopment));
+				foreach (RDNode node in controller.nodes) {
+					if (node.tech != null && node.tech.scienceCost < level)
+						node.tech.UnlockTech (true); //this will trigger an event, but we're not actioning this event for now.
+				}
+			} 
+			unlockTechnology = false;
+		}
+
+		public void UpgradeAllBuildings()
+		{
+			ScenarioUpgradeableFacilities.protoUpgradeables.ToList ().ForEach (pu =>
+           	{
+				foreach (var p in pu.Value.facilityRefs) {
+					Utilities.Log("CareerLite", GetInstanceID(), "Current level of " + p.name + " is " + ScenarioUpgradeableFacilities.GetFacilityLevel(p.name));
+					if (!facilities.ContainsKey(p.name)) {
+						facilities.Add(p.name, ScenarioUpgradeableFacilities.GetFacilityLevel(p.name));
+					} else {
+						facilities[p.name] = ScenarioUpgradeableFacilities.GetFacilityLevel(p.name);
+					}
+
+					p.SetLevel(p.MaxLevel);
+				}
+			});
+		}
+
+		public void DowngradeAllBuildings()
+		{
+			ScenarioUpgradeableFacilities.protoUpgradeables.ToList ().ForEach (pu =>
+			                                                                   {
+				foreach (var p in pu.Value.facilityRefs) {
+					float newLevel = facilities[p.name];
+
+					// GetFacilityLevel returns a float between 0 and 1, but the actual levels are ints. By multiplying with the level count of the facility, I get the true level.
+					Utilities.Log("CareerLite", GetInstanceID(), "Current level of " + p.name + " is " + ScenarioUpgradeableFacilities.GetFacilityLevel(p.name) + ", downgrading to " +newLevel);
+					p.SetLevel((int)(newLevel*pu.Value.GetLevelCount())); 
+				}
+			});
 		}
 
 		private IEnumerator Start()
@@ -80,38 +138,74 @@ namespace CareerLite
 			Utilities.Log ("CareerLite", GetInstanceID (), "Hook RnDTreeSpawn");
 			RDController.OnRDTreeSpawn.Add (RnDOpened);
 
-			LockMoney ();
-
 			yield return 0;
 
 			ScenarioUpgradeableFacilities.protoUpgradeables.ToList ().ForEach (pu =>
 			{
 				foreach (var p in pu.Value.facilityRefs) {
-					p.SetLevel(p.MaxLevel);
+					Utilities.Log ("CareerLite", GetInstanceID (), "Current level of " + p.name + " is " + ScenarioUpgradeableFacilities.GetFacilityLevel (p.name) + " count " + pu.Value.GetLevelCount());
+					if (!facilities.ContainsKey (p.name)) {
+						facilities.Add (p.name, ScenarioUpgradeableFacilities.GetFacilityLevel (p.name));
+					} else {
+						facilities [p.name] = ScenarioUpgradeableFacilities.GetFacilityLevel (p.name);
+					}
 				}
 			});
-
-			LockMoney ();
 		}
 
-
-		public override void OnAwake ()
+		public void Update()
 		{
+			if (CareerLiteGUI.TogglesChanged) {
+				Utilities.Log ("CareerLite", GetInstanceID (), "Toggles have changed!");
+				// Lock funds?
+				if (CareerLiteGUI.GetOption (CareerOptions.LOCKFUNDS)) {
+					LockMoney ();
+				} 
 
+				unlockTechnology = true; // do this on the next RnD;
+
+				if (CareerLiteGUI.GetOption(CareerOptions.UNLOCKBUILDINGS)) {
+					UpgradeAllBuildings ();
+				} else {
+					DowngradeAllBuildings ();
+				}
+
+				CareerLiteGUI.TogglesChanged = false;
+			}
 		}
 
 		public override void OnSave (ConfigNode node)
 		{
+			CareerLiteGUI.SaveSettings (node);
+
+			foreach (string key in facilities.Keys) {
+				node.AddValue (key, facilities [key].ToString());
+			}
 		}
 
 		public override void OnLoad (ConfigNode node)
 		{
+			CareerLiteGUI.LoadSettings (node);
+
+			List<string> keys = new List<string> (facilities.Keys);
+			foreach (string key in keys) {
+				float level;
+				node.GetConfigValue (out level, key);
+				facilities [key] = level;
+			}
 		}
 
 		void OnDestroy ()
 		{
 			GameEvents.OnFundsChanged.Remove (FundsChanged);
 			RDController.OnRDTreeSpawn.Remove (RnDOpened);
+
+			CareerLiteGUI.Destroy ();
+		}
+
+		void OnGUI()
+		{
+			CareerLiteGUI.DrawGUI ();
 		}
 
 	}
