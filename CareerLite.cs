@@ -21,11 +21,11 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Collections;
-using Astrotech;
 
 namespace CareerLite
 {
-	[KSPScenario(ScenarioCreationOptions.AddToExistingCareerGames | ScenarioCreationOptions.AddToNewCareerGames,GameScenes.FLIGHT,GameScenes.EDITOR,GameScenes.SPACECENTER,GameScenes.TRACKSTATION)] 
+
+	[KSPScenario(ScenarioCreationOptions.AddToExistingCareerGames | ScenarioCreationOptions.AddToNewCareerGames,GameScenes.FLIGHT,GameScenes.EDITOR,GameScenes.SPACECENTER,GameScenes.TRACKSTATION)]
 	public class CareerLite : ScenarioModule
 	{
 		public static double MONEY_LOCK = 99999999999;
@@ -69,8 +69,7 @@ namespace CareerLite
 		private IEnumerator Start()
 		{
 
-
-			Debug.Log("[CareerLite [" + GetInstanceID().ToString ("X") + "][" + Time.time.ToString ("0.0000") + "]: Start");
+			//Utilities.Log ("CareerLite", GetInstanceID (), "Start");
 
 			// Hook fund changes
 			Debug.Log ("[CareerLite]: Hook FundsChanged");
@@ -106,7 +105,7 @@ namespace CareerLite
 
 		public override void OnLoad (ConfigNode node)
 		{
-			Debug.Log("[CareerLite [" + GetInstanceID ().ToString ("X") + "][" + Time.time.ToString ("0.0000") + "]: OnLoad.");
+			//Utilities.Log ("CareerLite", GetInstanceID (), "OnLoad");
 		}
 
 		void OnDestroy ()
