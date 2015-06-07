@@ -1,14 +1,15 @@
 using System;
 using UnityEngine;
+using Astrotech;
 
 namespace CareerLite
 {
-	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
+	[KSPAddon(KSPAddon.Startup.SpaceCentre, false)]
 	public class CareerLiteUI : MonoBehaviour
 	{
 		static readonly CareerLiteUI _instance = new CareerLiteUI();
 		public bool useAppLauncher = true;
-		private IButton toolbarButton;
+		private IButton toolbarButton = null;
 
 		public static CareerLiteUI Instance {
 			get {
@@ -22,13 +23,13 @@ namespace CareerLite
 			if (ToolbarManager.ToolbarAvailable) {
 				useAppLauncher = false; // force using the toolbar if it exists!
 
-				toolbarButton = ToolbarManager.Instance.add ("Career Lite", "careerlitebutton");
+				toolbarButton = ToolbarManager.Instance.add ("CareerLite", "careerlitebutton");
 				toolbarButton.TexturePath = "Astrotech/CareerLite/icons/careerlite";
-				toolbarButton.ToolTip = "Career Lite options";
+				toolbarButton.ToolTip = "CareerLite options";
 				toolbarButton.OnClick += (e) => {
-					Debug.Log("[CareerLite]: Toolbar button was clicked!");
+					Utilities.Log ("CareerLiteUI", GetInstanceID (), "Toolbar button was pressed");
 				};
-
+			
 			}
 		}
 
@@ -45,6 +46,14 @@ namespace CareerLite
 		public void OnGui()
 		{
 
+		}
+
+		void OnDestroy ()
+		{
+			if (toolbarButton != null)
+			{
+				toolbarButton.Destroy ();
+			}
 		}
 	}
 }

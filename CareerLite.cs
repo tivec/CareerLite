@@ -21,6 +21,7 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Collections;
+using Astrotech;
 
 namespace CareerLite
 {
@@ -32,7 +33,7 @@ namespace CareerLite
 
 		public CareerLite ()
 		{
-			Debug.Log("[CareerLite [" + this.GetInstanceID ().ToString ("X") + "][" + Time.time.ToString ("0.0000") + "]: Constructor");
+			Utilities.Log ("CareerLite", GetInstanceID (), "Constructor");
 		}
 
 		public void FundsChanged (double amount, TransactionReasons reason)
@@ -72,11 +73,11 @@ namespace CareerLite
 			//Utilities.Log ("CareerLite", GetInstanceID (), "Start");
 
 			// Hook fund changes
-			Debug.Log ("[CareerLite]: Hook FundsChanged");
+			Utilities.Log ("CareerLite", GetInstanceID (), "Hook FundsChanged");
 			GameEvents.OnFundsChanged.Add (FundsChanged);
 
 			// Hook technology
-			Debug.Log ("[CareerLite]: Hook RnDOpened");
+			Utilities.Log ("CareerLite", GetInstanceID (), "Hook RnDTreeSpawn");
 			RDController.OnRDTreeSpawn.Add (RnDOpened);
 
 			LockMoney ();
@@ -105,7 +106,6 @@ namespace CareerLite
 
 		public override void OnLoad (ConfigNode node)
 		{
-			//Utilities.Log ("CareerLite", GetInstanceID (), "OnLoad");
 		}
 
 		void OnDestroy ()

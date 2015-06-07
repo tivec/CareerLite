@@ -53,19 +53,21 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Core" />
+    <Reference Include="AstrotechUtilities">
+      <HintPath>..\..\..\Games\KSP\1.0.2-dev\GameData\Astrotech\AstrotechUtilities.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ToolbarWrapper.cs" />
+    <Compile Include="CareerLite.cs" />
     <Compile Include="CareerLiteUI.cs" />
+    <Compile Include="ToolbarWrapper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <EmbeddedResource Include="icons\careerlite.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="CareerLite.cs" />
   </ItemGroup>
 </Project>
