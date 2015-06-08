@@ -20,8 +20,8 @@ One can argue that the functionality is already in the game. You can go into the
 
 ## Future plans
 
-In 0.3 and beyond, a couple of new features are planned. 
-* A GUI to enable or disable features at will.
+In 0.5 and beyond, a couple of new features are planned. 
+* Lock SCIENCE points so you can buy any technology.
 * A way to lock your reputation.
 
 ## Releases
@@ -29,6 +29,8 @@ In 0.3 and beyond, a couple of new features are planned.
 All releases will be made available here on Github:
 
 https://github.com/tivec/CareerLite/releases
+
+As of version 0.4, this mod also depends on AstrotechUtilities, which is included in the release archive.
 
 ## License
 This plugin is licensed under GPLv3. See the LICENSE file for details

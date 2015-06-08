@@ -55,9 +55,7 @@ namespace CareerLite
 				toolbarButton.TexturePath = "Astrotech/CareerLite/icons/careerlite";
 				toolbarButton.ToolTip = "CareerLite options";
 				toolbarButton.OnClick += (e) => {
-					Utilities.Log ("CareerLiteUI", GetHashCode(), "Toolbar button was pressed");
 					ToggleGui(!guiActive);
-					Utilities.Log("CareerLiteUI", GetHashCode(), "Gui: " + GuiActive.ToString());
 				};
 			} else {
 				if (ApplicationLauncher.Ready && appLauncherButton == null)
@@ -105,7 +103,6 @@ namespace CareerLite
 		{
 			if (options.ContainsKey(opt))
 			{
-				Utilities.Log ("CareerLiteUI", GetHashCode (), "Option " + opt.ToString() + " = " + options[opt].GetState());
 				return options[opt].GetState();
 			}
 
@@ -117,7 +114,6 @@ namespace CareerLite
 			if (options.ContainsKey(opt))
 			{
 				options[opt].state = value;
-				Utilities.Log ("CareerLiteUI", GetHashCode (), "Option " + opt.ToString() + " => " + options[opt].GetState());
 			}
 		}
 
@@ -224,7 +220,6 @@ namespace CareerLite
 				bool oldState = _state;
 				_state = GUILayout.Toggle (_state, description, GUILayout.ExpandWidth (true));
 				if (_state != oldState) {
-					Utilities.Log ("MenuToggle", GetHashCode (), "State changed to " + _state);
 					callback (_state);
 				}
 			}

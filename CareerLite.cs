@@ -46,8 +46,6 @@ namespace CareerLite
 
 		public CareerLite ()
 		{
-			Utilities.Log ("CareerLite", GetInstanceID (), "Constructor");
-
 			// add the facilities, so we can save/load properly - can we do this better?
 			facilities.Add ("LaunchPad", 0);
 			facilities.Add ("Runway", 0);
@@ -65,8 +63,6 @@ namespace CareerLite
 
 		private void SetupToggles() 
 		{
-			Utilities.Log ("CareerLiteUI", GetHashCode (), "Setting up toggle buttons");
-			
 			Rect optionRect = new Rect (0, 0, 195, 20);
 			CareerLiteGUI.CreateToggle (CareerOptions.LOCKFUNDS, optionRect, false, "Lock funds", FundsLocked, new[] { GameScenes.SPACECENTER, GameScenes.FLIGHT, GameScenes.TRACKSTATION  });
 			CareerLiteGUI.CreateToggle (CareerOptions.UNLOCKBUILDINGS, optionRect, false, "Unlock buildings", BuildingsUnlocked);
@@ -148,7 +144,6 @@ namespace CareerLite
 
 		public void RnDOpened (RDController controller)
 		{
-			Utilities.Log ("CareerLite", GetInstanceID (), "TechnologyUnlock is " + TechnologyUnlock.UNLOCK.ToString ());
 			if (unlockTechnology == TechnologyUnlock.UNLOCK)
 			{
 				UnlockTechnologies ();
@@ -161,13 +156,11 @@ namespace CareerLite
 
 		public void RnDGUIClosed()
 		{
-			Utilities.Log ("CareerLite", GetInstanceID (), "RnD GUI Closed");
 			RnDOpen = false;
 		}
 
 		public void RnDGUIOpened()
 		{
-			Utilities.Log ("CareerLite", GetInstanceID (), "RnD GUI Opened");
 			RnDOpen = true;
 		}
 
@@ -216,7 +209,6 @@ namespace CareerLite
 			ScenarioUpgradeableFacilities.protoUpgradeables.ToList ().ForEach (pu =>
            	{
 				foreach (var p in pu.Value.facilityRefs) {
-					Utilities.Log("CareerLite", GetInstanceID(), "Current level of " + p.name + " is " + ScenarioUpgradeableFacilities.GetFacilityLevel(p.name));
 					if (!facilities.ContainsKey(p.name)) {
 						facilities.Add(p.name, ScenarioUpgradeableFacilities.GetFacilityLevel(p.name));
 					} else {
@@ -237,7 +229,6 @@ namespace CareerLite
 						float newLevel = facilities[p.name];
 
 						// GetFacilityLevel returns a float between 0 and 1, but the actual levels are ints. By multiplying with the level count of the facility, I get the true level.
-						Utilities.Log("CareerLite", GetInstanceID(), "Current level of " + p.name + " is " + ScenarioUpgradeableFacilities.GetFacilityLevel(p.name) + ", downgrading to " +newLevel);
 						p.SetLevel((int)(newLevel*pu.Value.GetLevelCount())); 
 					} else {
 						Utilities.Log("CareerLite", GetInstanceID(), "Facility " + p.name + " was missing in our registry!");
@@ -249,15 +240,10 @@ namespace CareerLite
 
 		private void Start()
 		{
-
-			//Utilities.Log ("CareerLite", GetInstanceID (), "Start");
-
 			// Hook fund changes
-			Utilities.Log ("CareerLite", GetInstanceID (), "Hook FundsChanged");
 			GameEvents.OnFundsChanged.Add (FundsChanged);
 
 			// Hook technology
-			Utilities.Log ("CareerLite", GetInstanceID (), "Hook RnDTreeSpawn");
 			RDController.OnRDTreeSpawn.Add (RnDOpened);
 			GameEvents.onGUIRnDComplexSpawn.Add (RnDGUIOpened);
 			GameEvents.onGUIRnDComplexDespawn.Add (RnDGUIClosed);
@@ -274,8 +260,6 @@ namespace CareerLite
 
 		public override void OnSave (ConfigNode node)
 		{
-			Utilities.Log ("CareerLite", GetInstanceID (), "Entering OnSave");
-
 			// if we set to unlock or revert, but end up in the save
 			if (unlockTechnology == TechnologyUnlock.UNLOCK) {
 				CareerLiteGUI.SetOption (CareerOptions.UNLOCKTECH, false);
@@ -290,7 +274,6 @@ namespace CareerLite
 			ConfigNode buildingLevels = new ConfigNode ("BUILDING_LEVELS");
 
 			foreach (string key in facilities.Keys) {
-				Utilities.Log ("CareerLite", GetInstanceID (), "Facility '" + key + " level " + facilities[key].ToString());
 				buildingLevels.AddValue (key, facilities [key].ToString());
 			}
 
@@ -300,7 +283,6 @@ namespace CareerLite
 
 		public override void OnLoad (ConfigNode node)
 		{
-			Utilities.Log ("CareerLite", GetInstanceID (), "Entering OnLoad");
 			CareerLiteGUI.LoadSettings (node);
 
 			if (node.HasValue ("RevertFunds"))
@@ -315,7 +297,6 @@ namespace CareerLite
 				foreach (string key in keys) {
 					float level;
 					buildingLevels.GetConfigValue (out level, key);
-					Utilities.Log ("CareerLite", GetInstanceID (), "Facility '" + key + " level " + level);
 					facilities [key] = level;
 				}
 			}
