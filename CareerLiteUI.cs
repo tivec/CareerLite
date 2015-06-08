@@ -16,7 +16,7 @@ namespace CareerLite
 		private bool guiActive = false;
 		public bool useAppLauncher = true;
 		private IButton toolbarButton = null;
-
+		private ApplicationLauncherButton appLauncherButton;
 
 		private int windowID;
 		private Rect optionsWindowRect;
@@ -38,6 +38,11 @@ namespace CareerLite
 			}
 		}
 
+		public void ToggleGui(bool show)
+		{
+			GuiActive = show;
+		}
+
 		public CareerLiteUI ()
 		{
 			options = new Dictionary<CareerOptions, MenuToggle> ();
@@ -51,24 +56,50 @@ namespace CareerLite
 				toolbarButton.ToolTip = "CareerLite options";
 				toolbarButton.OnClick += (e) => {
 					Utilities.Log ("CareerLiteUI", GetHashCode(), "Toolbar button was pressed");
-					GuiActive = !GuiActive;
+					ToggleGui(!guiActive);
 					Utilities.Log("CareerLiteUI", GetHashCode(), "Gui: " + GuiActive.ToString());
 				};
+			} else {
+				if (ApplicationLauncher.Ready && appLauncherButton == null)
+				{
+					appLauncherButton = ApplicationLauncher.Instance.AddModApplication(
+						() => { ToggleGui(true); },
+						() => { ToggleGui(false); },
+						() => {}, // DoNothing! :)
+						() => {},
+						() => {},
+						() => {},
+						ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.SPACECENTER | ApplicationLauncher.AppScenes.TRACKSTATION,
+						(Texture)GameDatabase.Instance.GetTexture("Astrotech/CareerLite/icons/careerlite_stock", false));
+				}
 			}
 
 
 
 			windowID = Guid.NewGuid ().GetHashCode ();
-			optionsWindowRect = new Rect (0, 0, 200, 100);
+
+			optionsWindowRect = new Rect (200, 175, 200, 25);
 		}
 
+
+		/* Creates a toggle button. By default only visible in the space center. */
 		public void CreateToggle(CareerOptions opt, Rect rect, bool defaultstate, string description, Action<bool> cback)
 		{
 			options.Add (
 				opt,
 				new MenuToggle (rect, defaultstate, description, cback)
-			);
+				);
 		}
+
+		/* Override: Creates a toggle button that works in specific scenes */
+		public void CreateToggle(CareerOptions opt, Rect rect, bool defaultstate, string description, Action<bool> cback, GameScenes[] scenes)
+		{
+			options.Add (
+				opt,
+				new MenuToggle (rect, defaultstate, description, cback, scenes)
+				);
+		}
+
 
 		public bool GetOption(CareerOptions opt)
 		{
@@ -79,6 +110,15 @@ namespace CareerLite
 			}
 
 			return false;
+		}
+
+		public void SetOption(CareerOptions opt, bool value)
+		{
+			if (options.ContainsKey(opt))
+			{
+				options[opt].state = value;
+				Utilities.Log ("CareerLiteUI", GetHashCode (), "Option " + opt.ToString() + " => " + options[opt].GetState());
+			}
 		}
 
 		public void LoadSettings(ConfigNode node)
@@ -105,10 +145,11 @@ namespace CareerLite
 
 		public void Draw(int windowID)
 		{
+
 			GUILayout.BeginVertical ();
 			foreach(KeyValuePair<CareerOptions, MenuToggle> toggle in options) 
 			{
-				toggle.Value.draw ();
+				toggle.Value.draw (HighLogic.LoadedScene);
 			}
 			GUILayout.EndVertical ();
 			GUI.DragWindow ();
@@ -134,13 +175,25 @@ namespace CareerLite
 		private string description;
 		public bool _state;
 		private Action<bool> callback;
+		private GameScenes[] _scenes;
+
+		public MenuToggle(Rect sizeRect, bool defaultState, string desc, Action<bool> cback, GameScenes[] scenes)
+		{
+			initialize (sizeRect, defaultState, desc, cback, scenes);
+		}
 
 		public MenuToggle(Rect sizeRect, bool defaultState, string desc, Action<bool> cback)
+		{
+			initialize (sizeRect, defaultState, desc, cback, new[] { GameScenes.SPACECENTER } );
+		}
+
+		private void initialize(Rect sizeRect, bool defaultState, string desc, Action<bool> cback, GameScenes[] scenes)
 		{
 			size = new Rect (sizeRect);
 			_state = defaultState;
 			description = desc;
 			callback = cback;
+			_scenes = scenes;
 		}
 
 		public bool state {
@@ -163,13 +216,17 @@ namespace CareerLite
 
 
 		// this must be called in OnGUI
-		public void draw()
+		public void draw (GameScenes scene)
 		{
-			bool oldState = _state;
-			_state = GUILayout.Toggle (_state, description, GUILayout.ExpandWidth (true));
-			if (_state != oldState) {
-				Utilities.Log ("MenuToggle", GetHashCode (), "State changed to " + _state);
-				callback (_state);
+
+			if ( Array.FindIndex(_scenes, sc => sc == scene) > -1 )
+			{
+				bool oldState = _state;
+				_state = GUILayout.Toggle (_state, description, GUILayout.ExpandWidth (true));
+				if (_state != oldState) {
+					Utilities.Log ("MenuToggle", GetHashCode (), "State changed to " + _state);
+					callback (_state);
+				}
 			}
 		}
 	}

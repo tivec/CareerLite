@@ -69,5 +69,8 @@
     <EmbeddedResource Include="icons\careerlite.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="icons\careerlite_stock.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

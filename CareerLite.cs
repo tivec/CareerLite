@@ -68,7 +68,7 @@ namespace CareerLite
 			Utilities.Log ("CareerLiteUI", GetHashCode (), "Setting up toggle buttons");
 			
 			Rect optionRect = new Rect (0, 0, 195, 20);
-			CareerLiteGUI.CreateToggle (CareerOptions.LOCKFUNDS, optionRect, false, "Lock funds", FundsLocked);
+			CareerLiteGUI.CreateToggle (CareerOptions.LOCKFUNDS, optionRect, false, "Lock funds", FundsLocked, new[] { GameScenes.SPACECENTER, GameScenes.FLIGHT, GameScenes.TRACKSTATION  });
 			CareerLiteGUI.CreateToggle (CareerOptions.UNLOCKBUILDINGS, optionRect, false, "Unlock buildings", BuildingsUnlocked);
 			CareerLiteGUI.CreateToggle (CareerOptions.UNLOCKTECH, optionRect, false, "Unlock technologies", TechnologiesUnlocked);
 		}
@@ -113,18 +113,22 @@ namespace CareerLite
 				unlockTechnology = TechnologyUnlock.UNLOCK;
 				if (RnDOpen) {
 					UnlockTechnologies ();
-					ScreenMessages.PostScreenMessage ("CareerLite: Technologies unlocked. Close and reopen the Research Department to see changes.");
+					ScreenMessages.PostScreenMessage ("CareerLite: Technologies unlocked. Close and reopen the R&D screen to see changes.");
 				} else {
-					ScreenMessages.PostScreenMessage ("CareerLite: Visit the R&D to confirm technology changes.");
+					unlockTechnology = TechnologyUnlock.OFF;
+					CareerLiteGUI.SetOption (CareerOptions.UNLOCKTECH, false);
+					ScreenMessages.PostScreenMessage ("CareerLite: Please visit the R&D building to use this feature.");
 				}
 
 			} else {
 				unlockTechnology = TechnologyUnlock.REVERT;
 				if (RnDOpen) {
 					LockTechnologies ();
-					ScreenMessages.PostScreenMessage ("CareerLite: Technologies locked. Close and reopen the Research Department to see changes.");
+					ScreenMessages.PostScreenMessage ("CareerLite: Technologies locked. Close and reopen the R&D screen to see changes.");
 				} else {
-					ScreenMessages.PostScreenMessage ("CareerLite: Visit the R&D to confirm technology changes.");
+					unlockTechnology = TechnologyUnlock.OFF;
+					CareerLiteGUI.SetOption (CareerOptions.UNLOCKTECH, true);
+					ScreenMessages.PostScreenMessage ("CareerLite: Please visit the R&D building to use this feature.");
 				}
 			}
 		}
@@ -144,6 +148,7 @@ namespace CareerLite
 
 		public void RnDOpened (RDController controller)
 		{
+			Utilities.Log ("CareerLite", GetInstanceID (), "TechnologyUnlock is " + TechnologyUnlock.UNLOCK.ToString ());
 			if (unlockTechnology == TechnologyUnlock.UNLOCK)
 			{
 				UnlockTechnologies ();
@@ -156,13 +161,16 @@ namespace CareerLite
 
 		public void RnDGUIClosed()
 		{
+			Utilities.Log ("CareerLite", GetInstanceID (), "RnD GUI Closed");
 			RnDOpen = false;
 		}
 
 		public void RnDGUIOpened()
 		{
+			Utilities.Log ("CareerLite", GetInstanceID (), "RnD GUI Opened");
 			RnDOpen = true;
 		}
+
 
 		/* Thanks to Michael Marvin, author of the mod TreeToppler, for showing me that UnlockTech is the proper way of unlocking technologies.
 		 * Code for TreeToppler is available under GPLv3, http://forum.kerbalspaceprogram.com/threads/107663, and express permission was given
@@ -172,6 +180,11 @@ namespace CareerLite
 		 */
 		public void UnlockTechnologies()
 		{
+			if (!RnDOpen)
+				return;
+
+			unlockTechnology = TechnologyUnlock.OFF;
+
 			float level = GameVariables.Instance.GetScienceCostLimit(ScenarioUpgradeableFacilities.GetFacilityLevel(SpaceCenterFacility.ResearchAndDevelopment));
 			foreach (RDNode node in RDController.Instance.nodes) {
 				if (node.tech != null && node.tech.scienceCost < level)
@@ -181,6 +194,9 @@ namespace CareerLite
 
 		void LockTechnologies ()
 		{
+			if (!RnDOpen)
+				return;
+
 			unlockTechnology = TechnologyUnlock.OFF;
 
 			foreach (RDNode node in RDController.Instance.nodes)
@@ -249,11 +265,26 @@ namespace CareerLite
 
 		public void Update()
 		{
+			if (RnDOpen && unlockTechnology == TechnologyUnlock.REVERT) {
+				LockTechnologies ();
+			} else if (RnDOpen && unlockTechnology == TechnologyUnlock.UNLOCK) {
+				UnlockTechnologies ();
+			}
 		}
 
 		public override void OnSave (ConfigNode node)
 		{
 			Utilities.Log ("CareerLite", GetInstanceID (), "Entering OnSave");
+
+			// if we set to unlock or revert, but end up in the save
+			if (unlockTechnology == TechnologyUnlock.UNLOCK) {
+				CareerLiteGUI.SetOption (CareerOptions.UNLOCKTECH, false);
+				ScreenMessages.PostScreenMessage ("CareerLite: Timed out technology unlocking.");
+			} else if (unlockTechnology == TechnologyUnlock.REVERT) {
+				CareerLiteGUI.SetOption (CareerOptions.UNLOCKTECH, true);
+				ScreenMessages.PostScreenMessage ("CareerLite: Timed out technology locking.");
+			}
+
 			CareerLiteGUI.SaveSettings (node);
 
 			ConfigNode buildingLevels = new ConfigNode ("BUILDING_LEVELS");
@@ -288,10 +319,6 @@ namespace CareerLite
 					facilities [key] = level;
 				}
 			}
-
-			if (CareerLiteGUI.GetOption(CareerOptions.UNLOCKTECH)) {
-				unlockTechnology = TechnologyUnlock.UNLOCK;
-			}
 		}
 
 		void OnDestroy ()
@@ -300,7 +327,6 @@ namespace CareerLite
 			RDController.OnRDTreeSpawn.Remove (RnDOpened);
 			GameEvents.onGUIRnDComplexSpawn.Remove (RnDGUIOpened);
 			GameEvents.onGUIRnDComplexDespawn.Remove (RnDGUIClosed);
-
 			CareerLiteGUI.Destroy ();
 		}
 
