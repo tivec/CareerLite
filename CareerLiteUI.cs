@@ -14,10 +14,9 @@ namespace CareerLite
 	public class CareerLiteUI
 	{
 		private bool guiActive = false;
-		private bool togglesChanged = false; // if the settings have changed, we need to do stuff!
-
 		public bool useAppLauncher = true;
 		private IButton toolbarButton = null;
+
 
 		private int windowID;
 		private Rect optionsWindowRect;
@@ -33,15 +32,6 @@ namespace CareerLite
 			}
 		}
 
-		public bool TogglesChanged {
-			get {
-				return togglesChanged;
-			}
-			set {
-				togglesChanged = value;
-			}
-		}
-
 		public Dictionary<CareerOptions, MenuToggle> Options {
 			get {
 				return options;
@@ -51,7 +41,7 @@ namespace CareerLite
 		public CareerLiteUI ()
 		{
 			options = new Dictionary<CareerOptions, MenuToggle> ();
-			SetupToggles ();
+
 			// Check if the toolbar is available
 			if (ToolbarManager.ToolbarAvailable) {
 				useAppLauncher = false; // force using the toolbar if it exists!
@@ -66,11 +56,13 @@ namespace CareerLite
 				};
 			}
 
+
+
 			windowID = Guid.NewGuid ().GetHashCode ();
 			optionsWindowRect = new Rect (0, 0, 200, 100);
 		}
 
-		private void CreateToggle(CareerOptions opt, Rect rect, bool defaultstate, string description, Action cback)
+		public void CreateToggle(CareerOptions opt, Rect rect, bool defaultstate, string description, Action<bool> cback)
 		{
 			options.Add (
 				opt,
@@ -78,27 +70,12 @@ namespace CareerLite
 			);
 		}
 
-		private void onToggled()
-		{
-			TogglesChanged = true;
-		}
-
-		private void SetupToggles() 
-		{
-			Utilities.Log ("CareerLiteUI", GetHashCode (), "Setting up toggle buttons");
-
-			Rect optionRect = new Rect (0, 0, 195, 20);
-			CreateToggle (CareerOptions.LOCKFUNDS, optionRect, false, "Lock funds", onToggled);
-			CreateToggle (CareerOptions.UNLOCKBUILDINGS, optionRect, false, "Unlock buildings", onToggled);
-			CreateToggle (CareerOptions.UNLOCKTECH, optionRect, false, "Unlock technologies", onToggled);
-		}
-
 		public bool GetOption(CareerOptions opt)
 		{
 			if (options.ContainsKey(opt))
 			{
-				Utilities.Log ("CareerLiteUI", GetHashCode (), "Option " + opt.ToString() + " = " + options[opt].state);
-				return options[opt].state;
+				Utilities.Log ("CareerLiteUI", GetHashCode (), "Option " + opt.ToString() + " = " + options[opt].GetState());
+				return options[opt].GetState();
 			}
 
 			return false;
@@ -106,6 +83,7 @@ namespace CareerLite
 
 		public void LoadSettings(ConfigNode node)
 		{
+			
 			node.GetConfigValue (out options [CareerOptions.LOCKFUNDS]._state, "LockFunds");
 			node.GetConfigValue (out options [CareerOptions.UNLOCKBUILDINGS]._state, "UnlockBuildings");
 			node.GetConfigValue (out options [CareerOptions.UNLOCKTECH]._state, "UnlockTech");
@@ -143,6 +121,8 @@ namespace CareerLite
 				toolbarButton.Destroy ();
 			}
 		}
+
+
 	}
 
 	/* The MenuToggle class was built on the MIT Licensed code of Technicalfool's mod HeatWarning
@@ -151,11 +131,11 @@ namespace CareerLite
 	public class MenuToggle
 	{
 		private Rect size;
-		public bool _state;
 		private string description;
-		private Action callback;
+		public bool _state;
+		private Action<bool> callback;
 
-		public MenuToggle(Rect sizeRect, bool defaultState, string desc, Action cback)
+		public MenuToggle(Rect sizeRect, bool defaultState, string desc, Action<bool> cback)
 		{
 			size = new Rect (sizeRect);
 			_state = defaultState;
@@ -176,6 +156,12 @@ namespace CareerLite
 			get { return size; }
 		}
 
+		public bool GetState()
+		{
+			return _state;
+		}
+
+
 		// this must be called in OnGUI
 		public void draw()
 		{
@@ -183,11 +169,10 @@ namespace CareerLite
 			_state = GUILayout.Toggle (_state, description, GUILayout.ExpandWidth (true));
 			if (_state != oldState) {
 				Utilities.Log ("MenuToggle", GetHashCode (), "State changed to " + _state);
-				callback ();
+				callback (_state);
 			}
 		}
 	}
-
 
 }
 
