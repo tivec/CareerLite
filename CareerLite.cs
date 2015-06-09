@@ -37,9 +37,12 @@ namespace CareerLite
 	public class CareerLite : ScenarioModule
 	{
 		public static double MONEY_LOCK = 99999999999;
+		public static float SCIENCE_LOCK = 9999999;
+
 		private CareerLiteUI CareerLiteGUI = new CareerLiteUI();
 		private TechnologyUnlock unlockTechnology = TechnologyUnlock.OFF;
 		private double revertFunds = MONEY_LOCK;
+		private float revertScience = SCIENCE_LOCK;
 		private Dictionary<string, float> facilities = new Dictionary<string, float>();
 		bool RnDOpen = false;
 
@@ -65,6 +68,7 @@ namespace CareerLite
 		{
 			Rect optionRect = new Rect (0, 0, 195, 20);
 			CareerLiteGUI.CreateToggle (CareerOptions.LOCKFUNDS, optionRect, false, "Lock funds", FundsLocked, new[] { GameScenes.SPACECENTER, GameScenes.FLIGHT, GameScenes.TRACKSTATION  });
+			CareerLiteGUI.CreateToggle (CareerOptions.LOCKSCIENCE, optionRect, false, "Lock science points", ScienceLocked, new[] { GameScenes.SPACECENTER, GameScenes.FLIGHT, GameScenes.TRACKSTATION  });
 			CareerLiteGUI.CreateToggle (CareerOptions.UNLOCKBUILDINGS, optionRect, false, "Unlock buildings", BuildingsUnlocked);
 			CareerLiteGUI.CreateToggle (CareerOptions.UNLOCKTECH, optionRect, false, "Unlock technologies", TechnologiesUnlocked);
 		}
@@ -80,6 +84,17 @@ namespace CareerLite
 			}
 		}
 
+		public void ScienceChanged (float amount, TransactionReasons reason)
+		{
+			if (!CareerLiteGUI.GetOption (CareerOptions.LOCKSCIENCE)) 
+				return;
+
+			if (reason != TransactionReasons.Cheating) // we don't want an ugly infinite loop here, do we?
+			{
+				LockScience ();
+			}
+		}
+
 		public void FundsLocked(bool state)
 		{
 			if (state) {
@@ -91,6 +106,20 @@ namespace CareerLite
 				Funding.Instance.AddFunds (-Funding.Instance.Funds, TransactionReasons.Cheating);
 				Funding.Instance.AddFunds (revertFunds, TransactionReasons.Cheating);
 				ScreenMessages.PostScreenMessage ("CareerLite: Funds reverted.");
+			}
+		}
+
+		public void ScienceLocked(bool state)
+		{
+			if (state) {
+				// We just locked funds. Save the data now.
+				revertScience = ResearchAndDevelopment.Instance.Science;
+				LockScience ();
+				ScreenMessages.PostScreenMessage ("CareerLite: Science locked.");
+			} else {
+				ResearchAndDevelopment.Instance.AddScience (-ResearchAndDevelopment.Instance.Science, TransactionReasons.Cheating);
+				ResearchAndDevelopment.Instance.AddScience (revertScience, TransactionReasons.Cheating);
+				ScreenMessages.PostScreenMessage ("CareerLite: Science reverted.");
 			}
 		}
 
@@ -138,6 +167,18 @@ namespace CareerLite
 			} else if (Funding.Instance.Funds > MONEY_LOCK) {
 				Funding.Instance.AddFunds (-Funding.Instance.Funds, TransactionReasons.Cheating);
 				Funding.Instance.AddFunds (MONEY_LOCK, TransactionReasons.Cheating);
+			}
+		}
+
+		public void LockScience ()
+		{
+			// This is a safeguard, just to make sure we have locked money.
+
+			if (ResearchAndDevelopment.Instance.Science < SCIENCE_LOCK) {
+				ResearchAndDevelopment.Instance.AddScience (SCIENCE_LOCK - ResearchAndDevelopment.Instance.Science, TransactionReasons.Cheating);
+			} else if (Funding.Instance.Funds > MONEY_LOCK) {
+				ResearchAndDevelopment.Instance.AddScience (-ResearchAndDevelopment.Instance.Science, TransactionReasons.Cheating);
+				ResearchAndDevelopment.Instance.AddScience (SCIENCE_LOCK, TransactionReasons.Cheating);
 			}
 		}
 
@@ -242,6 +283,7 @@ namespace CareerLite
 		{
 			// Hook fund changes
 			GameEvents.OnFundsChanged.Add (FundsChanged);
+			GameEvents.OnScienceChanged.Add (ScienceChanged);
 
 			// Hook technology
 			RDController.OnRDTreeSpawn.Add (RnDOpened);
@@ -278,6 +320,7 @@ namespace CareerLite
 			}
 
 			node.AddValue ("RevertFunds", revertFunds);
+			node.AddValue ("RevertScience", revertScience);
 			node.AddNode (buildingLevels);
 		}
 
@@ -288,6 +331,8 @@ namespace CareerLite
 			if (node.HasValue ("RevertFunds"))
 				node.GetConfigValue (out revertFunds, "RevertFunds");
 
+			if (node.HasValue ("RevertScience"))
+				node.GetConfigValue (out revertScience, "RevertScience");
 
 			if (node.HasNode("BUILDING_LEVELS"))
 			{
@@ -305,6 +350,7 @@ namespace CareerLite
 		void OnDestroy ()
 		{
 			GameEvents.OnFundsChanged.Remove (FundsChanged);
+			GameEvents.OnScienceChanged.Remove (ScienceChanged);
 			RDController.OnRDTreeSpawn.Remove (RnDOpened);
 			GameEvents.onGUIRnDComplexSpawn.Remove (RnDGUIOpened);
 			GameEvents.onGUIRnDComplexDespawn.Remove (RnDGUIClosed);

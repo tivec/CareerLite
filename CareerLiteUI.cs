@@ -7,6 +7,7 @@ namespace CareerLite
 {
 	public enum CareerOptions {
 		LOCKFUNDS,
+		LOCKSCIENCE,
 		UNLOCKTECH,
 		UNLOCKBUILDINGS
 	}
@@ -121,6 +122,7 @@ namespace CareerLite
 		{
 			
 			node.GetConfigValue (out options [CareerOptions.LOCKFUNDS]._state, "LockFunds");
+			node.GetConfigValue (out options [CareerOptions.LOCKSCIENCE]._state, "LockScience");
 			node.GetConfigValue (out options [CareerOptions.UNLOCKBUILDINGS]._state, "UnlockBuildings");
 			node.GetConfigValue (out options [CareerOptions.UNLOCKTECH]._state, "UnlockTech");
 		}
@@ -128,6 +130,7 @@ namespace CareerLite
 		public void SaveSettings(ConfigNode node)
 		{
 			node.AddValue ("LockFunds", GetOption (CareerOptions.LOCKFUNDS).ToString ());
+			node.AddValue ("LockScience", GetOption (CareerOptions.LOCKSCIENCE).ToString ());
 			node.AddValue ("UnlockBuildings", GetOption (CareerOptions.UNLOCKBUILDINGS).ToString ());
 			node.AddValue ("UnlockTech", GetOption (CareerOptions.UNLOCKTECH).ToString ());
 		}
