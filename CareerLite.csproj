@@ -39,6 +39,8 @@
     <CustomCommands>
       <CustomCommands>
         <Command type="AfterBuild" command="../../.Deploy/deploy ${ProjectConfigName}" workingdir="../../.Deploy" />
+        <Command type="BeforeBuild" command="rm -rf ${TargetDir}/../icons" />
+        <Command type="AfterBuild" command="mv -f ${TargetDir}/icons ../" workingdir="${TargetDir}" />
       </CustomCommands>
     </CustomCommands>
   </PropertyGroup>
